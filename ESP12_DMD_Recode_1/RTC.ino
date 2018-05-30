@@ -11,6 +11,7 @@ void getRTC()
     dayOfWeek=now.dayOfWeek();
     year=now.year();
     temperature = rtc.getTemperature();
+    
 }
 
 void updateRTC(byte tg,byte bl,uint16_t th,byte jam, byte menit, byte dayW)

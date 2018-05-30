@@ -17,6 +17,7 @@
 #include "writeAnything.h"
 
 
+#include "DHT.h"
 #include <SPI.h>
 #include <DMD2.h>
 #include <fonts/SystemFont5x7.h>
@@ -26,6 +27,8 @@
 #include "fonts/angka6x13.h"
 #include "fonts/angka_2.h"
 #include "fonts/Font3x5.h"
+#include "fonts/minimalis.h"
+#include "fonts/Comic_Sans_MS_13.h"
 
 #define pin_A 16
 #define pin_B 12
@@ -35,6 +38,10 @@
 #define pin_noe 15
 #define DISPLAYS_WIDE 2
 #define DISPLAYS_HIGH 1
+
+#define BUZZER 3
+#define DHTPIN 2 
+#define DHTTYPE DHT11
 
 #define MAX_BUFFER 100
 
@@ -85,11 +92,12 @@ struct Link
 };
 
 SPIDMD dmd(DISPLAYS_WIDE, DISPLAYS_HIGH, pin_noe, pin_A, pin_B, pin_sclk); // DMD controls the entire display
-byte second, minute, hour, dayOfWeek, date, month, year;
+byte second, minute, hour, dayOfWeek, date, month, year, humidity;
 float temperature;
 uint32_t old_ts;
-byte i, j, durasi = 0;
+byte i, durasi,vdetik, lastVdetik;
 byte layar = 0;
+unsigned long last;
 
 
 const char* APSSID_ = "YoZor@";
@@ -98,6 +106,7 @@ const char* APPASS_ = "yoz";
 //DateTime dt(2018, 05, 01, 22, 13, 0, 1);
 
 ESP8266WebServer server ( 80 );
+DHT dht(DHTPIN, DHTTYPE);
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -106,11 +115,16 @@ void setup() {
 
   Wire.begin();
   rtc.begin();
+  pinMode(BUZZER, OUTPUT);
+  digitalWrite(BUZZER, HIGH);
   delay(100);
-  //isiEEPROMLink();
-  //isiEEPROMSetting();
-  //bacaEEPROMLinkText();
-  //bacaEEPROMSetting();
+  dht.begin();
+  
+  digitalWrite(BUZZER, LOW);
+  isiEEPROMLink();
+  isiEEPROMSetting();
+  bacaEEPROMLinkText();
+  bacaEEPROMSetting();
 
   //AP();// make AP
   delay(1000);
@@ -122,19 +136,19 @@ void setup() {
   Serial.println("make AP");
   //Serial.println(data.APSSID);
   //Serial.println(data.APPass);
-  //WiFi.hostname("Yozora v3");
+  WiFi.hostname("Yozora v3");
   //WiFi.softAPConfig(local_IP, gateway, subnet);
-  //WiFi.softAP("ts", "0");
+  WiFi.softAP("ts", "0");
 
 
 
   //rtc.setDateTime(dt); //Adjust date-time as defined 'dt' above
-  dmd.setBrightness(255);
+  dmd.setBrightness(1);
   dmd.begin();
   dmd.selectFont(SystemFont5x7);
 
 
-  drawTextOnly("Yozora v3", 0, 0, 3000, Arial_Black_16);
+  drawTextOnly("Yozora v3", 0, 0, 3000, Comic_Sans_MS_13);
   dmd.clearScreen();
   //drawMarquee(0, 4);
   //drawTextOnly((String)myIP,0,0,3000,Font3x5);
@@ -143,41 +157,69 @@ void setup() {
   // Circle with a line at a tangent to it
 
   // Outline box containing a filled box
-  durasi = random(58);
-  //server.on ("/", handleHome);
-  //server.on ("/update", handleSentData);
-  //server.onNotFound ( handleNotFound );                   // bila tiddak di index server
-  //server.begin();
+  server.on ("/", handleHome);
+  server.on ("/update", handleSentData);
+  server.onNotFound ( handleNotFound );                   // bila tiddak di index server
+  server.begin();
 
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
-  //server.handleClient();
+
+  server.handleClient();
   //dmd.setBrightness(10);
-  getRTC();
-  delay(900);
-  if (layar==0)
-  {
-    drawClockSqr(0, 0);
+  //Serial.println(dht.readHumidity());
+
+
+  unsigned long now = millis();
+  if ((now - last) >= 999 ) {                 //timmer setiap mendekati 1000
+    last = now;
+    getRTC();
+    if (vdetik==1) humidity = dht.readHumidity();
     
-  } else if(layar ==1)
-  {
-    drawTextClock(0, 0);
-  } else if(layar ==2)
-  {
-    drawDate(0, 0);
-  } else if (layar ==3)
-  {
-    drawTextClockSmall(0, 0);
-  }else
-  {
-    layar=0;
+    if (vdetik <= 25) 
+    {
+      display1();
+    }
+    else if (vdetik <= 50) 
+    {
+      display2();
+    }
+    else if (vdetik <= 55) 
+    {
+      display3();
+    }
+    else if (vdetik <= 74) 
+    {
+      display4();
+    }else if (vdetik <= 83) 
+    {
+      display5();
+    }else if (vdetik <= 99) 
+    {
+      display6();
+    }else if (vdetik <= 125) 
+    {
+      display7();
+    }else if (vdetik <= 159) 
+    {
+      display8();
+    }
+    else  vdetik = 0;
+
+    
+    Serial.println(vdetik);
+    vdetik++;
+
+    
+    //layar++;
   }
-  //
+  /*
   if (durasi - second <= 0)
   {
     layar++;
     durasi = random(57, 58);
   }
+  */
 }

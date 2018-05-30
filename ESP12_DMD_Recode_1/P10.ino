@@ -48,9 +48,16 @@ void drawTemp(byte x_pos, byte y_pos)
 {
   String MSG;
   MSG= String(temperature)+"'C";
-  
   dmd.drawString(x_pos,y_pos,MSG);
 }
+
+void drawHmd(byte x_pos, byte y_pos)
+{
+  String MSG;
+  MSG= String(humidity)+"%";
+  dmd.drawString(x_pos,y_pos,MSG);
+}
+
 
 void drawMarquee(byte x,byte y)
 {
@@ -86,15 +93,35 @@ Link link;
 void drawTextClock(byte x_pos, byte y_pos)
 {
   dmd.clearScreen();
+
+  String temp;
+
+  if (hour<10){
+    temp = "0"+ String(hour);
+  } else {
+    temp = String(hour);
+  }
   
   dmd.selectFont(angka6x13);
-  dmd.drawString(x_pos+ 3, y_pos+ 0, String(hour));
+  dmd.drawString(x_pos+ 3, y_pos+ 0, temp);
+
+  if (minute<10){
+    temp = "0"+ String(minute);
+  } else {
+    temp = String(minute);
+  }
 
   dmd.selectFont(Font3x5);
-  dmd.drawString(x_pos+ 22, y_pos-2, String(minute));
+  dmd.drawString(x_pos+ 22, y_pos-2, temp);
+
+  if (second<10){
+    temp = "0"+ String(second);
+  } else {
+    temp = String(second);
+  }
 
   dmd.selectFont(Font3x5);
-  dmd.drawString(x_pos+ 22, y_pos + 6, String(second));
+  dmd.drawString(x_pos+ 22, y_pos + 6, temp);
 
   int n;
   n = second + 1;
@@ -111,7 +138,17 @@ void drawTextClock(byte x_pos, byte y_pos)
 
 void drawTextClockSmall(byte x_pos, byte y_pos)
 {
-  String jam = String(hour) + ":" + String(minute); //tampilan jam
+  String jam;
+  if (hour<10){
+    jam = "0"+ String(hour)+ ":";
+  } else {
+    jam = String(hour) + ":" ;
+  }
+  if (minute<10){
+    jam += "0" + String(minute);
+  } else {
+    jam += String(minute);
+  }//tampilan jam
 
   dmd.clearScreen();
   dmd.selectFont(angka_2);
@@ -132,8 +169,6 @@ void drawDate(byte x_pos, byte y_pos)
   dmd.drawString(x_pos+4, y_pos-2, hari);
   dmd.drawString(x_pos+4, y_pos+7, tanggal);
   //Serial.println(hari + ", " + tanggal);
-  delay(5000);
-
 }
 
 void drawTextOnly(String MSG, byte x, byte y, const uint16_t durr,const uint8_t *font)
